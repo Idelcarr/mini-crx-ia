@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CARIUX DRONE AUDITOR V1 - Control Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <header class="flex justify-between items-center pb-6 border-b border-gray-800">
+            <div>
+                <h1 class="text-3xl font-bold text-orange-500">CARIUX TECH</h1>
+                <p class="text-sm text-gray-400">Drone Auditor V1 - Mini CRX IA</p>
+            </div>
+            <div id="status-badge" class="bg-green-900 text-green-300 px-4 py-1 rounded-full text-sm font-semibold">
+                SISTEMA OPERATIVO
+            </div>
+        </header>
+
+        <!-- Grid Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            
+            <!-- Panel Telemetría -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700">
+                <h2 class="text-xl font-bold mb-4 text-orange-400">Telemetría en Vivo</h2>
+                <div class="space-y-4">
+                    <div class="bg-gray-900 p-3 rounded-lg flex justify-between">
+                        <span>Batería LiPo 4S:</span>
+                        <span id="bat-val" class="font-bold text-green-400">{{ telemetria.bateria }} V</span>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-lg flex justify-between">
+                        <span>Señal WiFi (RSSI):</span>
+                        <span id="rssi-val" class="font-bold text-yellow-400">{{ telemetria.rssi }} dBm</span>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-lg flex justify-between">
+                        <span>Temperatura:</span>
+                        <span id="temp-val" class="font-bold text-blue-400">{{ telemetria.temperatura }} °C</span>
+                    </div>
+                </div>
+
+                <!-- Gráfica de Batería -->
+                <div class="mt-4 bg-gray-900 p-3 rounded-lg border border-gray-700">
+                    <canvas id="graficaBateria" height="120"></canvas>
+                </div>
+
+                <!-- Botón Exportar PDF -->
+                <a href="/reporte/pdf/" target="_blank" class="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded text-sm inline-block mt-4">
+                    Exportar Reporte PDF
+                </a>
+            </div>
+
+            <!-- Panel Chat CRX IA -->
+            <div class="lg:col-span-2 bg-gray-800 p-5 rounded-xl border border-gray-700 flex flex-col h-[500px]">
+                <h2 class="text-xl font-bold mb-4 text-orange-400">Agente CRX IA</h2>
+                
+                <div id="chat-box" class="flex-1 bg-gray-900 p-4 rounded-lg overflow-y-auto space-y-3 mb-4 text-sm">
+                    <div class="bg-gray-800 p-3 rounded border border-gray-700">
+                        <strong class="text-orange-400">CRX IA:</strong> Sistema inicializado. ¿Qué revisión realizaremos hoy en el dron?
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="user-input" class="flex-1 bg-gray-900 border border-gray-700 rounded px-4 py-2 focus:outline-none focus:border-orange-500" placeholder="Escribe tu comando o consulta...">
+                    <button onclick="enviarMensaje()" class="bg-orange-600 hover:bg-orange-500 px-6 py-2 rounded font-bold">Enviar</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Panel Inspección Visual ESP32-CAM -->
+        <div class="mt-6 bg-gray-800 p-5 rounded-xl border border-gray-700">
+            <h2 class="text-xl font-bold mb-4 text-orange-400">Inspección Visual (ESP32-CAM)</h2>
+            <form id="form-upload" class="flex gap-4 mb-4">
+                <input type="file" id="input-foto" accept="image/*" class="bg-gray-900 text-sm text-gray-300 p-2 rounded border border-gray-700">
+                <button type="button" onclick="subirFoto()" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded font-bold text-sm">Subir Foto Dron</button>
+            </form>
+            <div id="resultado-vision" class="bg-gray-900 p-4 rounded text-sm hidden border border-gray-700">
+                <p id="texto-analisis" class="text-green-400 font-mono"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function enviarMensaje() {
+            const input = document.getElementById('user-input');
+            const chatBox = document.getElementById('chat-box');
+            const prompt = input.value.trim();
+            if(!prompt) return;
+
+            chatBox.innerHTML += `<div class="text-right"><span class="bg-orange-900/40 p-2 rounded inline-block"><strong>Tú:</strong> ${prompt}</span></div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const res = await fetch('/api/chat/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt: prompt})
+            });
+            const data = await res.json();
+
+            chatBox.innerHTML += `<div class="bg-gray-800 p-3 rounded border border-gray-700"><strong class="text-orange-400">CRX IA:</strong> ${data.respuesta}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function subirFoto() {
+            const input = document.getElementById('input-foto');
+            if (!input.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('foto', input.files[0]);
+
+            const res = await fetch('/api/upload/', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.status) {
+                const box = document.getElementById('resultado-vision');
+                const txt = document.getElementById('texto-analisis');
+                box.classList.remove('hidden');
+                txt.innerText = data.analisis;
+            }
+        }
+
+        // Configuración e inicialización de Chart.js
+        const ctx = document.getElementById('graficaBateria').getContext('2d');
+        const chartBateria = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['t-4', 't-3', 't-2', 't-1', 'Actual'],
+                datasets: [{
+                    label: 'Voltaje Batería (V)',
+                    data: [16.8, 16.2, 15.8, 15.5, 15.2],
+                    borderColor: '#f97316',
+                    tension: 0.3
+                }]
+            },
+            options: { scales: { y: { min: 13, max: 17 } } }
+        });
+    </script>
+</body>
+</html>
