@@ -17,10 +17,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         val py = Python.getInstance()
-        val pyModule = py.getModule("main") // Carga main.py
+        val mainModule = py.getModule("main") // Carga main.py
+
+        // Invocar la función Python de auditoría
+        val resultado = mainModule.callAttr("ejecutar_auditoria_completa").toMap()
+
+        val estadoVision = resultado["vision"].toString()
+        val respuestaIA = resultado["ia"].toString()
 
         // Obtener HTML generado desde Python
-        val htmlContent = pyModule.callAttr("generar_html").toString()
+        val htmlContent = mainModule.callAttr("generar_html").toString()
 
         // Configurar y mostrar el contenido en la WebView
         val webView = WebView(this)
