@@ -9,7 +9,7 @@
         android:allowBackup="true"
         android:label="CRX IA Drone Auditor"
         android:usesCleartextTraffic="true"
-        android:theme="@android:style/Theme.NoTitleBar">
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
         <activity
             android:name=".MainActivity"
