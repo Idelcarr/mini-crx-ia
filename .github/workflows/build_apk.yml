@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Cdigo
+      - name: Checkout Código
         uses: actions/checkout@v4
 
       - name: Configurar Java JDK 17
@@ -18,9 +18,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Configurar SDK de Android
-        uses: android-actions/setup-android@v3
 
       - name: Configurar Gradle 8.2
         uses: gradle/actions/setup-gradle@v3
