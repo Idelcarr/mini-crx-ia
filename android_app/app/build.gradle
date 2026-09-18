@@ -22,7 +22,7 @@ android {
         python {
             version "3.10"
             pip {
-                // Aquí puedes agregar librerías de Python si las necesitas (ejemplo: install "requests")
+                install "requests"
             }
         }
     }
