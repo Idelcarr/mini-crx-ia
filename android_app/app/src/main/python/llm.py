@@ -1,5 +1,5 @@
 import requests
-from .prompts import SYSTEM_PROMPT
+from prompts import SYSTEM_PROMPT
 
 # Reemplaza con la IP de tu PC en la red local (ejemplo) o URL del servidor
 OLLAMA_URL = "http://192.168.1.15:11434/api/generate"
