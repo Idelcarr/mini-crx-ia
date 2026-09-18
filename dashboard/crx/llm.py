@@ -11,7 +11,7 @@ def consultar_crx(prompt: str) -> str:
     try:
         client = Groq(api_key=GROQ_API_KEY)
         completion = client.chat.completions.create(
-            model="llama-3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "Eres CRX IA, un asistente experto para auditoría y control de drones."},
                 {"role": "user", "content": prompt}
