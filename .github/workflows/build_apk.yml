@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Código
+      - name: Checkout Cdigo
         uses: actions/checkout@v4
 
       - name: Configurar Java JDK 17
@@ -18,6 +18,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Configurar SDK de Android
+        uses: android-actions/setup-android@v3
 
       - name: Configurar Gradle 8.2
         uses: gradle/actions/setup-gradle@v3
@@ -27,7 +30,7 @@ jobs:
       - name: Compilar APK Debug
         run: |
           cd android_app
-          gradle assembleDebug --no-daemon
+          gradle assembleDebug --no-daemon --stacktrace
 
       - name: Subir APK como Artefacto
         uses: actions/upload-artifact@v4
