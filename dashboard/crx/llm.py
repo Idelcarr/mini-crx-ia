@@ -1,19 +1,24 @@
-import requests
-from .prompts import SYSTEM_PROMPT
+import os
+from groq import Groq
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "qwen2.5:3b"
+# Se lee la clave desde las variables de Render, NUNCA expuesta en el código
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 def consultar_crx(prompt: str) -> str:
-    payload = {
-        "model": MODEL_NAME,
-        "prompt": f"{SYSTEM_PROMPT}\n\nUsuario: {prompt}",
-        "stream": False
-    }
-    
+    if not GROQ_API_KEY:
+        return "[ERROR CRX IA]: La API Key de Groq no está configurada en las variables de Render."
+
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
-        response.raise_for_status()
-        return response.json().get("response", "Sin respuesta del motor.")
-    except requests.exceptions.RequestException as e:
-        return f"[ERROR CRX IA]: No se pudo conectar con el motor local Ollama ({str(e)})"
+        client = Groq(api_key=GROQ_API_KEY)
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "Eres CRX IA, un asistente experto para auditoría y control de drones."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"[ERROR CRX IA]: {str(e)}"
